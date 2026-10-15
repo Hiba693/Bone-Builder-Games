@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bone Builder: Fill the Skeleton!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1322;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Custom Test Tube Glass effect */
+        .tube-glass {
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.02) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-top: 3px solid rgba(255, 255, 255, 0.4);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .tube-fluid {
+            transition: all 0.5s ease;
+            box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Bone fill animation wrapper */
+        .bone-fill-wrapper {
+            transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Pulse glow animation for interactive feel */
+        @keyframes subtleGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.2)); }
+            50% { filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.45)); }
+        }
+
+        .bone-container-glow {
+            animation: subtleGlow 4s infinite ease-in-out;
+        }
+
+        /* Custom scrollbar reset to fit screen cleanly */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between p-2 sm:p-4 select-none">
+
+    <!-- Top Header -->
+    <header class="w-full max-w-7xl mx-auto flex justify-between items-center bg-[#1e293b]/80 border border-slate-700/60 rounded-xl px-4 py-2.5 shadow-lg backdrop-blur-md">
+        <div>
+            <h1 class="text-base sm:text-xl font-bold text-sky-400 tracking-tight flex items-center gap-2">
+                <span>🦴</span> Bone Builder: Fill the Skeleton!
+            </h1>
+            <p class="text-xs text-slate-400 hidden sm:block">Identify protective health factors to reach 100% bone density</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div id="counterBadge" class="bg-sky-500/15 border border-sky-400/30 text-sky-300 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
+                Protected: <span id="goodCount">0</span>/6
+            </div>
+            <button onclick="resetGame()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-2.5 py-1 rounded-lg transition-colors border border-slate-600">
+                Reset
+            </button>
+        </div>
+    </header>
+
+    <!-- Instruction / Feedback Banner -->
+    <div id="feedbackBanner" class="w-full max-w-7xl mx-auto my-1.5 py-1.5 px-4 rounded-lg bg-sky-950/40 border border-sky-500/30 text-sky-200 text-xs sm:text-sm text-center font-medium transition-all duration-300">
+        👇 Tap a protective test tube to pour essential minerals into the bone! Avoid harmful factors.
+    </div>
+
+    <!-- Main Workspace (3 Column Flex/Grid Layout) -->
+    <main class="w-full max-w-7xl mx-auto flex-1 grid grid-cols-12 gap-2 sm:gap-4 items-center min-h-0 relative">
+        
+        <!-- Left Column: 6 Test Tubes -->
+        <div class="col-span-3 lg:col-span-3 flex flex-col justify-between h-full gap-1.5" id="leftColumn">
+            <!-- Dynamically populated -->
+        </div>
+
+        <!-- Center Workspace: Big Realistic Femur Skeleton Bone -->
+        <div class="col-span-6 lg:col-span-6 h-full flex flex-col justify-center items-center bg-[#111827]/80 border border-slate-800 rounded-2xl p-2 relative overflow-hidden shadow-2xl bone-container-glow">
+            
+            <!-- Percentage Badge -->
+            <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-slate-700 px-3 py-1 rounded-full text-xs font-semibold text-slate-300 flex items-center gap-1.5 shadow-md z-20">
+                <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+                Density: <span id="densityText" class="text-sky-400 font-bold text-sm">0%</span>
+            </div>
+
+            <!-- Bone SVG Graphics Container -->
+            <div class="relative w-full h-full max-h-[460px] flex items-center justify-center">
+                <!-- Outer Base Bone Silhouette (Empty/Outline) -->
+                <svg class="h-full w-auto max-w-full drop-shadow-lg" viewBox="0 0 140 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Background skeleton silhouette -->
+                    <path d="
+                        M 45 30 
+                        C 30 15, 12 35, 28 58 
+                        C 38 70, 50 78, 54 105 
+                        L 54 215 
+                        C 50 242, 38 250, 28 262 
+                        C 12 285, 30 305, 45 290 
+                        C 60 278, 70 278, 85 290 
+                        C 100 305, 118 285, 102 262 
+                        C 92 250, 80 242, 76 215 
+                        L 76 105 
+                        C 80 78, 92 70, 102 58 
+                        C 118 35, 100 15, 85 30 
+                        C 70 42, 60 42, 45 30 Z" 
+                        fill="#1e293b" 
+                        stroke="#475569" 
+                        stroke-width="3" 
+                        stroke-dasharray="6 4"
+                    />
+                </svg>
+
+                <!-- Bone Dynamic Fill Layer (Clipped from bottom) -->
+                <div id="boneFillWrapper" class="bone-fill-wrapper absolute bottom-0 w-full flex items-end justify-center overflow-hidden h-[0%]">
+                    <svg class="h-full w-auto max-w-full" viewBox="0 0 140 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="boneFluidGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                                <stop offset="0%" stop-color="#0284c7" />
+                                <stop offset="50%" stop-color="#38bdf8" />
+                                <stop offset="100%" stop-color="#e0f2fe" />
+                            </linearGradient>
+                            <filter id="glow">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <!-- Filled bone vector matching silhouette -->
+                        <path d="
+                            M 45 30 
+                            C 30 15, 12 35, 28 58 
+                            C 38 70, 50 78, 54 105 
+                            L 54 215 
+                            C 50 242, 38 250, 28 262 
+                            C 12 285, 30 305, 45 290 
+                            C 60 278, 70 278, 85 290 
+                            C 100 305, 118 285, 102 262 
+                            C 92 250, 80 242, 76 215 
+                            L 76 105 
+                            C 80 78, 92 70, 102 58 
+                            C 118 35, 100 15, 85 30 
+                            C 70 42, 60 42, 45 30 Z" 
+                            fill="url(#boneFluidGradient)" 
+                            stroke="#38bdf8" 
+                            stroke-width="3.5"
+                            filter="url(#glow)"
+                        />
+                    </svg>
+                </div>
+
+                <!-- Big Center Reading -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <span id="centerPercentage" class="text-3xl sm:text-5xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.9)] tracking-tight">
+                        0%
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: 5 Test Tubes -->
+        <div class="col-span-3 lg:col-span-3 flex flex-col justify-between h-full gap-1.5" id="rightColumn">
+            <!-- Dynamically populated -->
+        </div>
+
+    </main>
+
+    <!-- Game Victory Modal Overlay -->
+    <div id="victoryModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex-col items-center justify-center z-50 p-4">
+        <div class="bg-[#1e293b] border border-sky-500/40 rounded-2xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl relative animate-bounce-in">
+            <div class="w-16 h-16 bg-sky-500/20 text-sky-400 rounded-full flex items-center justify-center mx-auto text-3xl mb-3 border border-sky-400/30">
+                🦴
+            </div>
+            <h2 class="text-2xl font-extrabold text-white tracking-wide mb-1">100% BONE DENSITY!</h2>
+            <p class="text-xs sm:text-sm text-slate-300 mb-5">You successfully identified all protective bone building factors!</p>
+
+            <div class="grid grid-cols-2 gap-2 text-left mb-6">
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 flex items-center gap-2">
+                    <span class="text-xl">💊</span>
+                    <div>
+                        <div class="text-xs font-bold text-white">Medication</div>
+                        <div class="text-[10px] text-slate-400">Prescribed treatment</div>
+                    </div>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 flex items-center gap-2">
+                    <span class="text-xl">🏃</span>
+                    <div>
+                        <div class="text-xs font-bold text-white">Exercise</div>
+                        <div class="text-[10px] text-slate-400">Weight-bearing activity</div>
+                    </div>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 flex items-center gap-2">
+                    <span class="text-xl">☀️</span>
+                    <div>
+                        <div class="text-xs font-bold text-white">Vitamin D</div>
+                        <div class="text-[10px] text-slate-400">Sunlight & supplements</div>
+                    </div>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 flex items-center gap-2">
+                    <span class="text-xl">🩺</span>
+                    <div>
+                        <div class="text-xs font-bold text-white">Screening</div>
+                        <div class="text-[10px] text-slate-400">DXA Bone Scans</div>
+                    </div>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 flex items-center gap-2">
+                    <span class="text-xl">🥛</span>
+                    <div>
+                        <div class="text-xs font-bold text-white">Calcium</div>
+                        <div class="text-[10px] text-slate-400">Dietary mineral support</div>
+                    </div>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 flex items-center gap-2">
+                    <span class="text-xl">🥩</span>
+                    <div>
+                        <div class="text-xs font-bold text-white">Protein</div>
+                        <div class="text-[10px] text-slate-400">Bone matrix building</div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="resetGame()" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-sky-500/25">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Item Definitions: 6 Good (Protective) + 5 Bad (Harmful) = 11 Test Tubes
+        const items = [
+            // Left Column Items (6 items)
+            { id: 'med', name: 'Medication adherence', type: 'good', emoji: '💊', color: '#ec4899', side: 'left' },
+            { id: 'alc', name: 'Alcohol', type: 'bad', emoji: '🍷', color: '#991b1b', side: 'left' },
+            { id: 'sweet', name: 'Sweets', type: 'bad', emoji: '🍬', color: '#f43f5e', side: 'left' },
+            { id: 'diet', name: 'Unhealthy diet', type: 'bad', emoji: '🍔', color: '#d97706', side: 'left' },
+            { id: 'caff', name: 'Caffeine', type: 'bad', emoji: '☕', color: '#78350f', side: 'left' },
+            { id: 'ex', name: 'Exercise', type: 'good', emoji: '🏃', color: '#10b981', side: 'left' },
+
+            // Right Column Items (5 items)
+            { id: 'vitd', name: 'Vitamin D', type: 'good', emoji: '☀️', color: '#eab308', side: 'right' },
+            { id: 'smoke', name: 'Smoking', type: 'bad', emoji: '🚬', color: '#64748b', side: 'right' },
+            { id: 'screen', name: 'Screening', type: 'good', emoji: '🩺', color: '#a855f7', side: 'right' },
+            { id: 'calc', name: 'Calcium', type: 'good', emoji: '🥛', color: '#38bdf8', side: 'right' },
+            { id: 'prot', name: 'Protein', type: 'good', emoji: '🥩', color: '#f97316', side: 'right' }
+        ];
+
+        let goodFoundCount = 0;
+        const totalGood = 6;
+
+        function initGame() {
+            goodFoundCount = 0;
+            document.getElementById('victoryModal').classList.add('hidden');
+            document.getElementById('victoryModal').classList.remove('flex');
+            
+            updateBoneDisplay();
+
+            const leftCol = document.getElementById('leftColumn');
+            const rightCol = document.getElementById('rightColumn');
+            leftCol.innerHTML = '';
+            rightCol.innerHTML = '';
+
+            items.forEach(item => {
+                const tubeCard = createTubeCard(item);
+                if (item.side === 'left') {
+                    leftCol.appendChild(tubeCard);
+                } else {
+                    rightCol.appendChild(tubeCard);
+                }
+            });
+
+            setBanner("👇 Tap a protective test tube to pour essential minerals into the bone! Avoid harmful factors.", "neutral");
+        }
+
+        // Generate individual test tube HTML components
+        function createTubeCard(item) {
+            const btn = document.createElement('button');
+            btn.id = `tube-${item.id}`;
+            btn.className = `w-full bg-[#1e293b] hover:bg-[#28374d] border border-slate-700/70 hover:border-sky-400/50 rounded-xl p-1.5 sm:p-2 flex items-center gap-2 transition-all duration-200 cursor-pointer shadow-md group relative overflow-hidden text-left focus:outline-none`;
+            
+            btn.innerHTML = `
+                <!-- Test Tube Graphic -->
+                <div class="relative w-7 sm:w-9 h-11 sm:h-12 rounded-b-full tube-glass flex-shrink-0 flex items-end justify-center overflow-hidden">
+                    <!-- Tube Liquid -->
+                    <div class="tube-fluid w-full h-[75%] rounded-b-full flex items-center justify-center" style="background-color: ${item.color};">
+                        <span class="text-xs sm:text-base drop-shadow-md transform group-hover:scale-110 transition-transform">${item.emoji}</span>
+                    </div>
+                </div>
+
+                <!-- Text Label -->
+                <div class="flex-1 min-w-0">
+                    <div class="text-[11px] sm:text-xs font-semibold text-slate-200 truncate group-hover:text-sky-300 transition-colors">
+                        ${item.name}
+                    </div>
+                    <div class="text-[9px] text-slate-400 font-medium badge-text">
+                        Tap to analyze
+                    </div>
+                </div>
+            `;
+
+            btn.onclick = () => handleTubeSelection(item, btn);
+            return btn;
+        }
+
+        function handleTubeSelection(item, element) {
+            if (element.classList.contains('disabled-tube')) return;
+
+            if (item.type === 'good') {
+                goodFoundCount++;
+                element.classList.add('disabled-tube', 'opacity-40', 'grayscale', 'cursor-not-allowed');
+                element.querySelector('.badge-text').textContent = "Added to Bone! ✓";
+                element.querySelector('.badge-text').className = "text-[9px] text-emerald-400 font-medium";
+
+                setBanner(`✅ Excellent! ${item.name} strengthens bone structure!`, "success");
+                updateBoneDisplay();
+
+                if (goodFoundCount >= totalGood) {
+                    setTimeout(() => {
+                        const victoryModal = document.getElementById('victoryModal');
+                        victoryModal.classList.remove('hidden');
+                        victoryModal.classList.add('flex');
+                    }, 600);
+                }
+            } else {
+                element.classList.add('disabled-tube', 'opacity-40', 'grayscale', 'cursor-not-allowed');
+                element.querySelector('.badge-text').textContent = "Harmful Factor ✗";
+                element.querySelector('.badge-text').className = "text-[9px] text-rose-400 font-medium";
+
+                setBanner(`⚠️ Warning! ${item.name} can impair bone health. Select protective items!`, "error");
+            }
+        }
+
+        function setBanner(text, state) {
+            const banner = document.getElementById('feedbackBanner');
+            banner.textContent = text;
+
+            if (state === "success") {
+                banner.className = "w-full max-w-7xl mx-auto my-1.5 py-1.5 px-4 rounded-lg bg-emerald-950/50 border border-emerald-500/40 text-emerald-200 text-xs sm:text-sm text-center font-medium transition-all duration-300";
+            } else if (state === "error") {
+                banner.className = "w-full max-w-7xl mx-auto my-1.5 py-1.5 px-4 rounded-lg bg-rose-950/50 border border-rose-500/40 text-rose-200 text-xs sm:text-sm text-center font-medium transition-all duration-300";
+            } else {
+                banner.className = "w-full max-w-7xl mx-auto my-1.5 py-1.5 px-4 rounded-lg bg-sky-950/40 border border-sky-500/30 text-sky-200 text-xs sm:text-sm text-center font-medium transition-all duration-300";
+            }
+        }
+
+        function updateBoneDisplay() {
+            const percentage = Math.round((goodFoundCount / totalGood) * 100);
+            document.getElementById('goodCount').textContent = goodFoundCount;
+            document.getElementById('densityText').textContent = `${percentage}%`;
+            document.getElementById('centerPercentage').textContent = `${percentage}%`;
+
+            const fillWrapper = document.getElementById('boneFillWrapper');
+            fillWrapper.style.height = `${percentage}%`;
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        // Initialize on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
